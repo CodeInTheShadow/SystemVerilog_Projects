@@ -10,6 +10,8 @@ A repository documenting my implementation and verification of digital hardware 
    - **Design:** Parameterized depth/width memory array with full/empty flags and pointer logic.
    - **Verification:** Layered testbench architecture.
 
+## 📁 Repository Structure
+```text
 SystemVerilog_Projects/
 │
 ├── README.md
@@ -20,3 +22,4 @@ SystemVerilog_Projects/
 └── fifo/
     ├── fifo.sv       
     └── fifo_tb.sv
+```
