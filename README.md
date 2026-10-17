@@ -9,3 +9,14 @@ A repository documenting my implementation and verification of digital hardware 
 2. **Synchronous FIFO** *(In Progress)*
    - **Design:** Parameterized depth/width memory array with full/empty flags and pointer logic.
    - **Verification:** Layered testbench architecture.
+
+SystemVerilog_Projects/
+│
+├── README.md
+├── dff/
+│   ├── dff.sv          
+│   └── dff_tb.sv
+│
+└── fifo/
+    ├── fifo.sv       
+    └── fifo_tb.sv
