@@ -68,4 +68,12 @@ interface fifo_if;
   logic full, empty;
   logic [7:0] dout;
   
+  clocking drv_cb @(negedge clk);
+    output rst, rd, wr, din;
+  endclocking
+  
+  clocking mon_cb @(posedge clk);
+    input #0 rst, rd, wr, din, empty, full, dout;
+  endclocking
+  
 endinterface
