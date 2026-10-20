@@ -19,41 +19,41 @@ module fifo(
       dout<=8'b00000000;
     end
     else if (rd && wr && full) begin
-      $display("Data %0d popped", mem[rdptr]);
+      $display("[DUT] : Data %0d popped", mem[rdptr]);
       dout<=mem[rdptr];
       rdptr<=rdptr+1;
       mem[wrptr]<=din;
-      $display("Data %0d added", din);
+      $display("[DUT] : Data %0d added", din);
       wrptr<=wrptr+1;
     end
     else if (rd && wr && empty) begin
       mem[wrptr]<=din;
-      $display("Data %0d added", din);
+      $display("[DUT] : Data %0d added", din);
       wrptr<=wrptr+1;
       count<=count+1;
     end
     else if (rd && wr && !full && !empty) begin
-      $display("Data %0d popped", mem[rdptr]);
+      $display("[DUT] : Data %0d popped", mem[rdptr]);
       dout<=mem[rdptr];
       rdptr<=rdptr+1;
       mem[wrptr]<=din;
-      $display("Data %0d added", din);
+      $display("[DUT] : Data %0d added", din);
       wrptr<=wrptr+1;
     end
     else if (wr && full) begin
-      $display("FIFO is full.");
+      $display("[DUT] : FIFO is full.");
     end
     else if (wr && !full) begin
       mem[wrptr]<=din;
-      $display("Data %0d added", din);
+      $display("[DUT] : Data %0d added", din);
       wrptr<=wrptr+1;
       count<=count+1;
     end
     else if (rd && empty) begin
-      $display("FIFO is empty.");      
+      $display("[DUT] : FIFO is empty.");      
     end
     else if (rd && !empty) begin
-      $display("Data %0d popped", mem[rdptr]);
+      $display("[DUT] : Data %0d popped", mem[rdptr]);
       dout<=mem[rdptr];
       rdptr<=rdptr+1;
       count<=count-1;
