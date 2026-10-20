@@ -109,6 +109,11 @@ class scoreboard;
   
   transaction trans;
   mailbox #(transaction) mbxms;
+  bit [7:0] mem[$:15];
+  bit [7:0] out;
+  bit em, fu;
+  bit pf;
+  int count=0, d=0, e=0, f=0, total=0;
   event next;
   
   function new(mailbox #(transaction) mbxms, event next);
@@ -119,7 +124,68 @@ class scoreboard;
   task run();
     forever begin
       mbxms.get(trans);
+      pf=1'b0;
+      total++;
+      //reference model
+      if (trans.rst) begin
+        mem.delete();
+        out=8'b00000000;
+      end
+      else if (trans.rd && trans.wr && (mem.size()==16)) begin
+        out=mem.pop_front();
+        mem.push_back(trans.din);
+      end
+      else if (trans.rd && trans.wr && (mem.size()==0)) begin
+        mem.push_back(trans.din);
+      end
+      else if (trans.rd && trans.wr && (mem.size()!==16) && (mem.size()!==0)) begin
+        out=mem.pop_front();
+        mem.push_back(trans.din);
+      end
+      else if (trans.wr && (mem.size()!==16)) begin
+        mem.push_back(trans.din);
+      end
+      else if (trans.rd && (mem.size()!==0)) begin
+        out=mem.pop_front();
+      end
       
+      //empty flag
+      if (mem.size()==0) em=1'b1;
+      else em=1'b0;
+      
+      //full flag
+      if (mem.size()==16) fu=1'b1;
+      else fu=1'b0;
+      
+      
+      
+      //dout check
+      if (out!==trans.dout) begin
+        $display("DOUT MISMATCH. Expected Value:%0d, Actual Value: %0d", out, trans.dout);
+        
+        pf=1'b1;
+      end
+      else d++;
+      
+      //empty flag check
+      if (em!==trans.empty) begin
+        $display("EMPTY FLAG MISMATCH. Expected Value:%0d, Actual Value: %0d", em, trans.empty);
+        pf=1'b1;
+      end
+      else e++;
+      
+      //full flag check
+      if (fu!==trans.full) begin
+        $display("FULL FLAG MISMATCH. Expected Value:%0d, Actual Value: %0d", fu, trans.full);
+        pf=1'b1;
+      end
+      else f++;
+      
+      if(pf==0) begin
+        $display("DATA MATCHES.");
+        count++;
+      end
+      $display("-----------------------------------------");
       -> next;
     end
   endtask
