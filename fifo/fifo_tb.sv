@@ -61,14 +61,27 @@ class driver;
     this.fif=fif;
   endfunction
   
+  task reset();
+    @(fif.drv_cb);
+    fif.drv_cb.rst<=1'b1;
+    repeat(2)@(posedge vif.clk);
+    @(fif.drv_cb);
+    fif.drv_cb.rst<=1'b0;
+    #40;
+    @(fif.drv_cb);
+    fif.drv_cb.rst<=1'b1;
+    @(fif.drv_cb);
+    fif.drv_cb.rst<=1'b0;
+  endtask
+  
   task run;
     forever begin
       mbxgd.get(dc);
       @(fif.drv_cb);
-      fif.drv_cb.rst=dc.rst;
-      fif.drv_cb.rd=dc.rd;
-      fif.drv_cb.wr=dc.wr;
-      fif.drv_cb.din=dc.din;
+      fif.drv_cb.rst<=dc.rst;
+      fif.drv_cb.rd<=dc.rd;
+      fif.drv_cb.wr<=dc.wr;
+      fif.drv_cb.din<=dc.din;
       dc.display("DRV");
     end
   endtask
@@ -182,7 +195,7 @@ class scoreboard;
       else f++;
       
       if(pf==0) begin
-        $display("DATA MATCHES.");
+        $display("ALL CHECKS PASSED.");
         count++;
       end
       $display("-----------------------------------------");
@@ -190,3 +203,83 @@ class scoreboard;
     end
   endtask
 endclass
+
+class enviroment;
+  
+  transaction tr;
+  generator gen;
+  driver drv;
+  monitor mon;
+  scoreboard sco;
+  mailbox #(transaction) mbxgd, mbxms;
+  event done, next, done_all;
+  virtual fifo_if fif;
+  
+  function new(virtual fifo_if fif, event done_all);
+    mbxgd=new();
+    mbxms=new();
+    tr=new();
+    gen=new(mbxgd, done, next);
+    drv=new(mbxgd, fif);
+    mon=new(mbxms, fif);
+    sco=new(mbxms, next);
+    this.done_all=done_all;
+    this.fif=fif;
+  endfunction
+  
+  task pre_test;
+    fif.rd<=1'b0;
+    fif.wr<=1'b0;
+    fif.din<=8'b00000000;
+  endtask
+  
+  task test();
+    fork
+      drv.reset();
+      gen.run();
+      drv.run();
+      mon.run();
+      sco.run();
+    join_any
+  endtask
+  
+  task post_test();
+    $display("DOUT TEST : %0d/%0d SUCCESSFUL CASES", sco.d, sco.total);
+    $display("EMPTY FLAG TEST : %0d/%0d SUCCESSFUL CASES", sco.e, sco.total);
+    $display("FULL FLAG TEST : %0d/%0d SUCCESSFUL CASES", sco.f, sco.total);
+    $display("OVERALL TEST : %0d/%0d SUCCESSFUL CASES", sco.count, sco.total);
+    ->done_all;
+  endtask
+  
+  task run();
+    pre_test();
+    test();
+    post_test();
+  endtask
+  
+endclass
+
+module tb;
+  
+  environment env;
+  event done_all;
+  fifo_if fif();
+  dut fifo(fif);
+  
+  initial begin
+    env=new(fif, done_all);
+    env.gen.count=10;
+    env.run();
+  end
+  
+  initial begin
+    @(done_all);
+    $finish;
+  end
+  
+  initial begin
+    $dumpfile("dump.vcd");
+    $dumpvars;
+  end
+  
+endmodule
