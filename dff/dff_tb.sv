@@ -289,7 +289,7 @@ module dff_tb();
     
   assert property (@(posedge vif.clk) past_valid && $past(~vif.rst) |-> (vif.q==$past(vif.din)));
   
-    assert property (@(posedge vif.clk) past_valid |-> vif.q == (~vif.qdash));
+  assert property (@(posedge vif.clk) past_valid |-> vif.q == (~vif.qdash));
         
   initial begin
     @(all_done);
