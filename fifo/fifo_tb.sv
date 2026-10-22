@@ -18,7 +18,7 @@ class transaction;
   endfunction
   
   function void display(string dis);
-    $display("[%0s] : rst=%0d | wr=%0d | rd=%0d | din=%0d | dout=%0d | full=%0d | empty=%0d", dis, this.rst, this.wr, this.rd, this.din, this.dout, this.full, this.empty);
+    $display("[%0s] : time=%0t | rst=%0d | wr=%0d | rd=%0d | din=%0d | dout=%0d | full=%0d | empty=%0d", dis, $time, this.rst, this.wr, this.rd, this.din, this.dout, this.full, this.empty);
   endfunction
   
 endclass
@@ -59,26 +59,29 @@ class driver;
   function new(mailbox #(transaction) mbxgd, virtual fifo_if fif);
     this.mbxgd=mbxgd;
     this.fif=fif;
+    dc=new();
   endfunction
   
   task reset();
     @(fif.drv_cb);
     fif.drv_cb.rst<=1'b1;
-    repeat(2)@(posedge vif.clk);
+    repeat(2)@(posedge fif.clk);
     @(fif.drv_cb);
     fif.drv_cb.rst<=1'b0;
+    /*
     #40;
     @(fif.drv_cb);
     fif.drv_cb.rst<=1'b1;
     @(fif.drv_cb);
     fif.drv_cb.rst<=1'b0;
+    */
   endtask
   
   task run;
     forever begin
       mbxgd.get(dc);
       @(fif.drv_cb);
-      fif.drv_cb.rst<=dc.rst;
+      //fif.drv_cb.rst<=dc.rst;
       fif.drv_cb.rd<=dc.rd;
       fif.drv_cb.wr<=dc.wr;
       fif.drv_cb.din<=dc.din;
@@ -132,6 +135,7 @@ class scoreboard;
   function new(mailbox #(transaction) mbxms, event next);
     this.mbxms=mbxms;
     this.next=next;
+    trans=new();
   endfunction
   
   task run();
@@ -170,7 +174,7 @@ class scoreboard;
       if (mem.size()==16) fu=1'b1;
       else fu=1'b0;
       
-      
+      trans.display("SCO");
       
       //dout check
       if (out!==trans.dout) begin
@@ -204,7 +208,7 @@ class scoreboard;
   endtask
 endclass
 
-class enviroment;
+class environment;
   
   transaction tr;
   generator gen;
@@ -226,16 +230,16 @@ class enviroment;
     this.done_all=done_all;
     this.fif=fif;
   endfunction
-  
+  /*
   task pre_test;
     fif.rd<=1'b0;
     fif.wr<=1'b0;
     fif.din<=8'b00000000;
   endtask
-  
+  */
   task test();
+    drv.reset();
     fork
-      drv.reset();
       gen.run();
       drv.run();
       mon.run();
@@ -244,6 +248,8 @@ class enviroment;
   endtask
   
   task post_test();
+    //#10;
+    @(next);
     $display("DOUT TEST : %0d/%0d SUCCESSFUL CASES", sco.d, sco.total);
     $display("EMPTY FLAG TEST : %0d/%0d SUCCESSFUL CASES", sco.e, sco.total);
     $display("FULL FLAG TEST : %0d/%0d SUCCESSFUL CASES", sco.f, sco.total);
@@ -252,7 +258,7 @@ class enviroment;
   endtask
   
   task run();
-    pre_test();
+    //pre_test();
     test();
     post_test();
   endtask
@@ -264,11 +270,15 @@ module tb;
   environment env;
   event done_all;
   fifo_if fif();
-  dut fifo(fif);
+  fifo dut(.clk(fif.clk), .rst(fif.rst), .rd(fif.rd), .wr(fif.wr), .din(fif.din), .full(fif.full), .empty(fif.empty), .dout(fif.dout));
+  
+  initial fif.clk=1'b0;
+  
+  always #10 fif.clk=~fif.clk;
   
   initial begin
     env=new(fif, done_all);
-    env.gen.count=10;
+    env.gen.count=30;
     env.run();
   end
   
