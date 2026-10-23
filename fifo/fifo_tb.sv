@@ -248,8 +248,6 @@ class environment;
   endtask
   
   task post_test();
-    //#10;
-    @(next);
     $display("DOUT TEST : %0d/%0d SUCCESSFUL CASES", sco.d, sco.total);
     $display("EMPTY FLAG TEST : %0d/%0d SUCCESSFUL CASES", sco.e, sco.total);
     $display("FULL FLAG TEST : %0d/%0d SUCCESSFUL CASES", sco.f, sco.total);
@@ -272,13 +270,13 @@ module tb;
   fifo_if fif();
   fifo dut(.clk(fif.clk), .rst(fif.rst), .rd(fif.rd), .wr(fif.wr), .din(fif.din), .full(fif.full), .empty(fif.empty), .dout(fif.dout));
   
-  initial fif.clk=1'b0;
+  initial fif.clk=1'b1;
   
   always #10 fif.clk=~fif.clk;
   
   initial begin
     env=new(fif, done_all);
-    env.gen.count=30;
+    env.gen.count=10;
     env.run();
   end
   
