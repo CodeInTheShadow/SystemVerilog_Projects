@@ -129,6 +129,7 @@ class scoreboard;
   bit [7:0] out;
   bit em, fu;
   bit pf;
+  int size;
   int count=0, d=0, e=0, f=0, total=0;
   event next;
   
@@ -142,36 +143,39 @@ class scoreboard;
     forever begin
       mbxms.get(trans);
       pf=1'b0;
+      size=mem.size();
       total++;
       //reference model
       if (trans.rst) begin
         mem.delete();
         out=8'b00000000;
       end
-      else if (trans.rd && trans.wr && (mem.size()==16)) begin
+      else if (trans.rd && trans.wr && (size==16)) begin
         out=mem.pop_front();
         mem.push_back(trans.din);
       end
-      else if (trans.rd && trans.wr && (mem.size()==0)) begin
+      else if (trans.rd && trans.wr && (size==0)) begin
         mem.push_back(trans.din);
       end
-      else if (trans.rd && trans.wr && (mem.size()!==16) && (mem.size()!==0)) begin
+      else if (trans.rd && trans.wr && (size!=16) && (size!=0)) begin
         out=mem.pop_front();
         mem.push_back(trans.din);
       end
-      else if (trans.wr && (mem.size()!==16)) begin
+      else if (trans.wr && (size!=16)) begin
         mem.push_back(trans.din);
       end
-      else if (trans.rd && (mem.size()!==0)) begin
+      else if (trans.rd && (size!=0)) begin
         out=mem.pop_front();
       end
       
+      size=mem.size();
+      
       //empty flag
-      if (mem.size()==0) em=1'b1;
+      if (size==0) em=1'b1;
       else em=1'b0;
       
       //full flag
-      if (mem.size()==16) fu=1'b1;
+      if (size==16) fu=1'b1;
       else fu=1'b0;
       
       trans.display("SCO");
@@ -239,12 +243,14 @@ class environment;
   */
   task test();
     drv.reset();
+    #15;
     fork
       gen.run();
       drv.run();
       mon.run();
       sco.run();
     join_any
+    disable fork;
   endtask
   
   task post_test();
