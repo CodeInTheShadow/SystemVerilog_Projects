@@ -241,11 +241,33 @@ class environment;
     fif.din<=8'b00000000;
   endtask
   */
+  
+  task directed_test();
+    for(int i=0; i<17; i++) begin
+      tr.rd=1'b0;
+      tr.wr=1'b1;
+      tr.din=i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
+    for(int i=0; i<17; i++) begin
+      tr.rd=1'b1;
+      tr.wr=1'b0;
+      tr.din=i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
+    ->done;
+  endtask
+  
   task test();
     drv.reset();
     #15;
     fork
-      gen.run();
+      //gen.run();
+      directed_test();
       drv.run();
       mon.run();
       sco.run();
