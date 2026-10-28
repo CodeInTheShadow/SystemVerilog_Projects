@@ -234,15 +234,16 @@ class environment;
     this.done_all=done_all;
     this.fif=fif;
   endfunction
-  /*
+  
   task pre_test;
     fif.rd<=1'b0;
     fif.wr<=1'b0;
     fif.din<=8'b00000000;
+    fif.dout<=8'b00000000;
   endtask
-  */
   
   task directed_test();
+    //full
     for(int i=0; i<17; i++) begin
       tr.rd=1'b0;
       tr.wr=1'b1;
@@ -251,6 +252,15 @@ class environment;
       tr.display("DIRECTED");
       @(next);
     end
+    for(int i=0; i<4; i++) begin
+      tr.rd=1'b1;
+      tr.wr=1'b1;
+      tr.din=100+i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
+    //empty
     for(int i=0; i<17; i++) begin
       tr.rd=1'b1;
       tr.wr=1'b0;
@@ -259,11 +269,41 @@ class environment;
       tr.display("DIRECTED");
       @(next);
     end
+    for(int i=0; i<4; i++) begin
+      tr.rd=1'b1;
+      tr.wr=1'b1;
+      tr.din=100+i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
+    //fill partially
+    for(int i=0; i<8; i++) begin
+      tr.rd=1'b0;
+      tr.wr=1'b1;
+      tr.din=i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
+    for(int i=0; i<4; i++) begin
+      tr.rd=1'b1;
+      tr.wr=1'b1;
+      tr.din=100+i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
     ->done;
   endtask
   
   task test();
-    drv.reset();
+    fork
+      drv.reset();
+      mon.run();
+      sco.run();
+    join_any
+    disable fork;
     #15;
     fork
       //gen.run();
@@ -284,7 +324,7 @@ class environment;
   endtask
   
   task run();
-    //pre_test();
+    pre_test();
     test();
     post_test();
   endtask
@@ -298,7 +338,7 @@ module tb;
   fifo_if fif();
   fifo dut(.clk(fif.clk), .rst(fif.rst), .rd(fif.rd), .wr(fif.wr), .din(fif.din), .full(fif.full), .empty(fif.empty), .dout(fif.dout));
   
-  initial fif.clk=1'b1;
+  initial fif.clk=1'b0;
   
   always #10 fif.clk=~fif.clk;
   
