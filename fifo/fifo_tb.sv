@@ -63,11 +63,16 @@ class driver;
   endfunction
   
   task reset();
+    dc.rst<=1'b1;
     @(fif.drv_cb);
-    fif.drv_cb.rst<=1'b1;
-    repeat(2)@(posedge fif.clk);
+    fif.drv_cb.rst<=dc.rst;
+    dc.display("RESET");
     @(fif.drv_cb);
-    fif.drv_cb.rst<=1'b0;
+    dc.display("RESET");
+    dc.rst<=1'b0;
+    @(fif.drv_cb);
+    fif.drv_cb.rst<=dc.rst;
+    dc.display("RESET");
     /*
     #40;
     @(fif.drv_cb);
@@ -293,21 +298,67 @@ class environment;
       tr.display("DIRECTED");
       @(next);
     end
+    //wrap around
+    for(int i=0; i<1; i++) begin
+      tr.rst=1'b1;
+      tr.rd=1'b0;
+      tr.wr=1'b0;
+      mbxgd.put(tr.copy());
+      tr.display("RESET");
+      @(next);
+    end
+    for(int i=0; i<1; i++) begin
+      tr.rst=1'b0;
+      mbxgd.put(tr.copy());
+      tr.display("RESET");
+      @(next);
+    end
+    for(int i=0; i<12; i++) begin
+      tr.rd=1'b0;
+      tr.wr=1'b1;
+      tr.din=i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
+    for(int i=0; i<10; i++) begin
+      tr.rd=1'b1;
+      tr.wr=1'b0;
+      tr.din=i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
+    for(int i=0; i<10; i++) begin
+      tr.rd=1'b0;
+      tr.wr=1'b1;
+      tr.din=i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
+    for(int i=0; i<12; i++) begin
+      tr.rd=1'b1;
+      tr.wr=1'b0;
+      tr.din=i;
+      mbxgd.put(tr.copy());
+      tr.display("DIRECTED");
+      @(next);
+    end
     ->done;
   endtask
   
   task test();
     fork
-      drv.reset();
-      mon.run();
-      sco.run();
-    join_any
-    disable fork;
-    #15;
-    fork
-      //gen.run();
-      directed_test();
-      drv.run();
+      begin
+        drv.reset();
+        #15;
+        fork
+          //gen.run();
+          directed_test();
+          drv.run();
+        join_any
+      end
       mon.run();
       sco.run();
     join_any
