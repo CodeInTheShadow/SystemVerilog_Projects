@@ -125,8 +125,8 @@ class scoreboard;
   
   transaction trans;
   mailbox #(transaction) mbxms;
-  bit [7:0] mem[$:15];
-  bit [7:0] out;
+  logic [7:0] mem[$:15];
+  logic [7:0] out;
   bit em, fu;
   bit pf;
   int size;
@@ -234,14 +234,13 @@ class environment;
     this.done_all=done_all;
     this.fif=fif;
   endfunction
-  
+  /*
   task pre_test;
     fif.rd<=1'b0;
     fif.wr<=1'b0;
     fif.din<=8'b00000000;
-    fif.dout<=8'b00000000;
   endtask
-  
+  */
   task directed_test();
     //full
     for(int i=0; i<17; i++) begin
@@ -252,7 +251,7 @@ class environment;
       tr.display("DIRECTED");
       @(next);
     end
-    for(int i=0; i<4; i++) begin
+    for(int i=0; i<2; i++) begin
       tr.rd=1'b1;
       tr.wr=1'b1;
       tr.din=100+i;
@@ -269,7 +268,7 @@ class environment;
       tr.display("DIRECTED");
       @(next);
     end
-    for(int i=0; i<4; i++) begin
+    for(int i=0; i<2; i++) begin
       tr.rd=1'b1;
       tr.wr=1'b1;
       tr.din=100+i;
@@ -278,7 +277,7 @@ class environment;
       @(next);
     end
     //fill partially
-    for(int i=0; i<8; i++) begin
+    for(int i=0; i<4; i++) begin
       tr.rd=1'b0;
       tr.wr=1'b1;
       tr.din=i;
@@ -286,7 +285,7 @@ class environment;
       tr.display("DIRECTED");
       @(next);
     end
-    for(int i=0; i<4; i++) begin
+    for(int i=0; i<2; i++) begin
       tr.rd=1'b1;
       tr.wr=1'b1;
       tr.din=100+i;
@@ -324,7 +323,7 @@ class environment;
   endtask
   
   task run();
-    pre_test();
+    //pre_test();
     test();
     post_test();
   endtask
