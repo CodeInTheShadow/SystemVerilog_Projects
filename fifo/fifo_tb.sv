@@ -86,7 +86,7 @@ class driver;
     forever begin
       mbxgd.get(dc);
       @(fif.drv_cb);
-      //fif.drv_cb.rst<=dc.rst;
+      fif.drv_cb.rst<=dc.rst;
       fif.drv_cb.rd<=dc.rd;
       fif.drv_cb.wr<=dc.wr;
       fif.drv_cb.din<=dc.din;
