@@ -359,8 +359,8 @@ class environment;
           drv.run();
         join_any
       end
-      mon.run();
-      sco.run();
+      #15 mon.run();
+      #15 sco.run();
     join_any
     disable fork;
   endtask
