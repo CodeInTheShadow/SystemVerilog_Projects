@@ -354,8 +354,10 @@ class environment;
         drv.reset();
         #15;
         fork
-          //gen.run();
-          directed_test();
+          begin
+            directed_test();
+            gen.run();
+          end
           drv.run();
         join_any
       end
@@ -394,7 +396,7 @@ module tb;
   
   initial begin
     env=new(fif, done_all);
-    env.gen.count=10;
+    env.gen.count=500;
     env.run();
   end
   
